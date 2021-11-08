@@ -1,6 +1,7 @@
 package model
 
 import java.io.{BufferedWriter, File, FileWriter}
+import java.nio.file.Files
 
 object Utils {
 
@@ -32,9 +33,17 @@ object Utils {
     sourceGraphWriter.close()
     wrapperWriter.close()
     mappingWriter.close()
+
+    copyF(new File("configFiles/metamodel.txt"), scenario + "metamodel.txt")
+    copyF(new File("configFiles/prefixes.txt"), scenario + "prefixes.txt")
+    copyF(new File("configFiles/queries.txt"), scenario + "queries.txt")
+
   }
 
-  // generation of query file
-  // generation of 2 prepared files that i should copy
+  def copyF(from: java.io.File, to: String) {
+    val out = new BufferedWriter( new FileWriter(to) );
+    io.Source.fromFile(from).getLines.foreach(s => out.write(s + "\n"));
+    out.close()
+  }
 
 }
