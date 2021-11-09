@@ -1,7 +1,6 @@
 package model
 
 import java.io.{BufferedWriter, File, FileWriter}
-import java.nio.file.Files
 
 object Utils {
 
@@ -17,10 +16,10 @@ object Utils {
     val wrapperWriter = new BufferedWriter(new FileWriter(scenario + "wrappers_files.txt"))
     val mappingWriter = new BufferedWriter(new FileWriter(scenario + "mappings.txt"))
     // Generating global graph files
-    concepts.foreach(Concept.generateGlobalGraphFile(_)(globalGraphWriter))
+    globalGraphWriter.write(concepts.map(_.stringify()).foldRight("")(_ + _))
     // generating files related to wrappers
+    sourceGraphWriter.write(wrappers.map(_.stringify()).foldRight("")(_ + _))
     wrappers.foreach(w => {
-      Wrapper.GenerateSourceGraphFile(w,sourceGraphWriter,scenario)
       Wrapper.GenerateMappingsFile(w,mappingWriter,scenario)
       Wrapper.GenerateWrapperFile(w,wrapperWriter,scenario)
       // Generating data files for each wrapper
@@ -37,7 +36,6 @@ object Utils {
     copyF(new File("configFiles/metamodel.txt"), scenario + "metamodel.txt")
     copyF(new File("configFiles/prefixes.txt"), scenario + "prefixes.txt")
     copyF(new File("configFiles/queries.txt"), scenario + "queries.txt")
-
   }
 
   def copyF(from: java.io.File, to: String) {

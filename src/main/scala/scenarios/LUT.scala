@@ -19,16 +19,16 @@ object LUT extends App {
   // Graph hierarchy
   val Sales =
     Concept("Sales")
-      .->(REVENUE)
+      .hasFeature{REVENUE}
       .->("location"){
         Concept("City")
-          .->(CITY)
+          .hasFeature{CITY}
           .partOf{
             Concept("Region")
-              .->(REGION)
+              .hasFeature{REGION}
               .partOf{
                 Concept("Country")
-                  .->(COUNTRY)
+                  .hasFeature{COUNTRY}
               }
           }
       }
@@ -36,19 +36,20 @@ object LUT extends App {
   // Wrappers
   val w1 =
     Wrapper("W1")
-      .->(Attribute("country") sameAs COUNTRY)
-      .->(Attribute("revenue") sameAs REVENUE)
+      .hasAttribute{Attribute("country") sameAs COUNTRY}
+      .hasAttribute{Attribute("revenue") sameAs REVENUE}
 
   val w2 =
     Wrapper("W2")
-      .->(Attribute("region") sameAs REGION)
-      .->(Attribute("revenue2") sameAs REVENUE)
+      .hasAttribute{Attribute("region") sameAs REGION}
+      .hasAttribute{Attribute("revenue2") sameAs REVENUE}
 
   val w3 =
     Wrapper("LUT")
-      .->(Attribute("region1") sameAs REGION)
-      .->(Attribute("country1") sameAs COUNTRY)
+      .hasAttribute{Attribute("region1") sameAs REGION}
+      .hasAttribute{Attribute("country1") sameAs COUNTRY}
 
   // WRITERS
   Utils.generateAllFiles(Set(Sales),Set(w1,w2,w3))(configurationFilePath)
+
 }

@@ -6,12 +6,25 @@ import java.io.BufferedWriter
 
 trait GraphComponent {
   def name:String
+  def stringify(): String
 }
-case class Edge(name:String) extends GraphComponent
+case class Edge(name:String) extends GraphComponent {
+  override def stringify(): String = ""
+}
 
-trait Feature extends GraphComponent
-case class IdFeature(name:String) extends Feature
+trait Feature extends GraphComponent {
+  override def stringify(): String = s"s:${name} rdf:type G:Feature\n"
+}
+case class IdFeature(name:String) extends Feature {
+  override def stringify(): String =
+    super.stringify() + s"s:${name} rdfs:subClassOf sc:identifier\n"
+}
 case class GenericFeature(name:String) extends Feature
+case class Measure(name: String) extends Feature {
+  override def stringify(): String =
+    super.stringify() +
+      s"s:${name} rdf:type G:Measure\n"
+}
 
 trait Concept extends GraphComponent {
   def linkedConcepts:Set[(Edge, Concept)]
@@ -24,31 +37,66 @@ trait Concept extends GraphComponent {
 
   def partOf(concept: Concept):Concept
 
+  override def stringify(): String =
+    s"s:${name} rdf:type G:Concept\n" +
+      linkedFeatures.map(e => s"s:${name} G:${e._1.name} s:${e._2.name}\n").foldRight("")(_ + _) +
+      linkedConcepts.map(e => s"s:${name} s:${e._1.name} s:${e._2.name}\n").foldRight("")(_ + _) +
+      linkedFeatures.map(e => e._2.stringify()).foldRight("")(_ + _) +
+      linkedConcepts.map(e => e._2.stringify()).foldRight("")(_ + _)
 }
 
-case class ConceptImpl(
-                        name:String,linkedConcepts: Set[(Edge, Concept)],linkedFeatures: Set[(Edge, Feature)]
-                      ) extends Concept {
+trait BaseConcept extends Concept {
+  override def hasFeature(feature: Feature): Concept = this match {
+    case GenericConcept(name,linkedConcepts,linkedFeatures) => GenericConcept(name,linkedConcepts,linkedFeatures + Tuple2(Edge("hasFeature"),feature))
+    case Level(name,linkedConcepts,linkedFeatures) => Level(name,linkedConcepts,linkedFeatures + Tuple2(Edge("hasFeature"),feature))
+  }
 
-  override def hasFeature(feature: Feature): Concept =
-    ConceptImpl(
-      this.name,
-      this.linkedConcepts,
-      this.linkedFeatures + Tuple2(Edge("hasFeature"),feature)
-    )
 
-  override def hasConcept(label: String)(concept: Concept): Concept =
-    ConceptImpl(
-      this.name,
-      this.linkedConcepts + Tuple2(Edge(label),concept),
-      this.linkedFeatures
-    )
+  override def hasConcept(label: String)(concept: Concept): Concept = this match {
+    case GenericConcept(name,linkedConcepts,linkedFeatures) => GenericConcept(name,linkedConcepts + Tuple2(Edge(label),concept),linkedFeatures)
+    case Level(name,linkedConcepts,linkedFeatures) => Level(name,linkedConcepts + Tuple2(Edge(label),concept),linkedFeatures)
+  }
 
-  def ->(feature: Feature): Concept = hasFeature(feature)
+  override def ->(feature: Feature): Concept = hasFeature(feature)
 
-  def ->(label: String)(concept: Concept): Concept = hasConcept(label)(concept)
+  override def ->(label: String)(concept: Concept): Concept = hasConcept(label)(concept)
 
   override def partOf(concept: Concept): Concept = hasConcept("partOf")(concept)
+
+}
+
+case class GenericConcept(
+                        name:String,linkedConcepts: Set[(Edge, Concept)],linkedFeatures: Set[(Edge, Feature)]
+                      ) extends BaseConcept
+
+case class Level(
+                  name:String,linkedConcepts: Set[(Edge, Concept)],linkedFeatures: Set[(Edge, Feature)]
+                ) extends BaseConcept {
+  override def hasConcept(label: String)(concept: Concept): Concept =
+    if (label != "partOf") throw new Exception("For a level the labels should be partOf") else super.hasConcept(label)(concept)
+
+  override def stringify(): String =
+    super.stringify() +
+      s"s:${name} rdf:type G:Level\n"
+}
+
+trait AggregatingFunction extends BaseConcept {
+  def measures: Set[Measure]
+  def aggregates(measure: Measure): AggregatingFunction
+
+  override def hasConcept(label: String)(concept: Concept): Concept = this
+
+  override def hasFeature(feature: Feature): Concept = this
+
+  override def stringify(): String =
+    s"s:${name} rdf:type G:Function\n" +
+      measures.map(m => s"s:${name} s:aggregates s:${m.name}\n").foldRight("")(_ + _)
+}
+
+case class Function(
+                     name:String,measures: Set[Measure],linkedConcepts: Set[(Edge, Concept)],linkedFeatures: Set[(Edge, Feature)]
+                   ) extends AggregatingFunction {
+  override def aggregates(measure: Measure): AggregatingFunction = Function(name,measures + measure,Set.empty,Set.empty)
 }
 
 trait Attribute extends GraphComponent {
@@ -62,6 +110,14 @@ object Attribute {
 
 case class AttributeImpl (name: String, sameAs: Option[Feature]) extends Attribute {
   override def sameAs(feature: Feature): Attribute = AttributeImpl(this.name,Some(feature))
+
+  override def stringify(): String =
+    s"s:${name} rdf:type S:Attribute\n" + {
+      sameAs match {
+        case Some(feature) => s"s:${name} owl:sameAs s:${feature.name}\n"
+        case None => ""
+      }
+    }
 }
 
 trait Wrapper extends GraphComponent {
@@ -73,11 +129,22 @@ trait Wrapper extends GraphComponent {
 case class WrapperImpl(name: String,attributes: Set[Attribute]) extends Wrapper {
   override def hasAttribute(attribute: Attribute): Wrapper = WrapperImpl(this.name, this.attributes + attribute)
   override def ->(attribute: Attribute): Wrapper = hasAttribute(attribute)
+  override def stringify(): String =
+    s"s:${name} rdf:type S:Wrapper\n" +
+      attributes.map(a => s"s:${name} S:hasAttribute s:${a.name}\n").foldRight("")(_ + _) +
+      attributes.map(_.stringify()).foldRight("")(_ + _)
 }
 
 // Operations definition
 
+object AggregatingFunction {
+  def apply(name: String): AggregatingFunction =
+    Function(name, Set.empty,Set.empty, Set.empty)
+}
+
 object Concept {
+
+  def apply(name:String): Concept = GenericConcept(name,Set.empty,Set.empty)
 
   def linkedConceptsWithLabel(concept: Concept)(label: String):Set[Concept] =
     concept.linkedConcepts.filter(_._1.name == label).map(_._2)
@@ -85,36 +152,10 @@ object Concept {
   def linkedFeatureName(concept: Concept)(name: String):Feature =
     concept.linkedFeatures.filter(_._2.name == name).map(_._2).head
 
-  /**
-   * Doesn't work with cyclic graphs, needs to be fixed
-   */
-  def generateGlobalGraphFile(concept: Concept)(f: BufferedWriter): Unit = {
-      // model.Concept definition
-      f.write("s:" + concept.name + " rdf:type G:Concept\n")
-      // Features
-      concept.linkedFeatures.foreach(feature => {
-        // Type feature
-        f.write("s:" + feature._2.name + " rdf:type G:Feature\n")
-        // model.Concept hasFeature model.Feature *** [MAPPING_LINE]
-        f.write("s:" + concept.name + " G:" + feature._1.name + " s:" + feature._2.name + "\n")
-        // Identifiers *** [MAPPING_LINE]
-        feature._2 match {
-          case IdFeature(name) =>
-            f.write("s:" + name + " rdfs:subClassOf sc:identifier\n")
-          case _ =>
-        }
-      })
-      // Edges pointed to other concepts *** [MAPPING_LINE]
-      concept.linkedConcepts.foreach(edge => {
-        f.write("s:" + concept.name + " s:" + edge._1.name + " s:" + edge._2.name + "\n")
-      })
-      // rec
-      if (concept.linkedConcepts.nonEmpty) {
-        concept.linkedConcepts.map(_._2).foreach(generateGlobalGraphFile(_)(f))
-      }
-    }
+}
 
-  def apply(name:String): Concept = ConceptImpl(name,Set.empty,Set.empty)
+object Level {
+  def apply(name: String): Level = Level(name,Set.empty,Set.empty)
 }
 
 object Wrapper {
@@ -136,22 +177,6 @@ object Wrapper {
   object GenerateWrapperFile extends WrapperWriter {
     override def apply(wrapper: Wrapper, f: BufferedWriter, path:String): Unit = {
       f.write("https://serginf.github.io/" + wrapper.name + "," + path + wrapper.name + ".csv\n")
-    }
-  }
-
-  object GenerateSourceGraphFile extends WrapperWriter {
-    override def apply(wrapper: Wrapper, f: BufferedWriter, path:String): Unit = {
-      // model.Wrapper
-      f.write("s:" + wrapper.name + " rdf:type S:Wrapper\n")
-      // Attributes
-      wrapper.attributes.foreach(a => {
-        f.write("s:" + a.name + " rdf:type S:Attribute\n")
-        f.write("s:" + wrapper.name + " S:hasAttribute " + "s:" + a.name + "\n")
-        a.sameAs match {
-          case Some(attr) => f.write("s:" + a.name + " owl:sameAs " + "s:" + attr.name + "\n")
-          case None =>
-        }
-      })
     }
   }
 

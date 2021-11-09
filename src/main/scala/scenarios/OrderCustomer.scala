@@ -3,8 +3,8 @@ import model._
 
 object OrderCustomer extends App {
 
-  //val configurationFilePath = "/Users/filippo/Desktop/NextiaQR/src/test/resources/scenarios/OrderCustomer/"
-  val configurationFilePath = "/Users/filippo/GraphBuilder/scenarios/OrderCustomer/"
+  val configurationFilePath = "/Users/filippo/Desktop/NextiaQR/src/test/resources/scenarios/OrderCustomer2/"
+//  val configurationFilePath = "/Users/filippo/GraphBuilder/scenarios/OrderCustomer/"
   Utils.buildPath(configurationFilePath)
 
   // GRAPH DEFINITION
@@ -30,11 +30,10 @@ object OrderCustomer extends App {
     Concept("Order")
       .hasFeature{DATE}
       .hasFeature{O_ID}
-      .hasConcept("doneBy"){
+      .->("doneBy"){
         Concept("Customer")
           .hasFeature{C_ID}
           .hasFeature{NAME}
-
       }
 
   // Wrappers
