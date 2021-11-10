@@ -45,11 +45,21 @@ object LUT extends App {
       .hasAttribute{Attribute("revenue2") sameAs REVENUE}
 
   val w3 =
+    Wrapper("W3")
+      .hasAttribute{Attribute("city") sameAs CITY}
+      .hasAttribute{Attribute("revenue3") sameAs REVENUE}
+
+  val w4 =
     Wrapper("LUT")
       .hasAttribute{Attribute("region1") sameAs REGION}
       .hasAttribute{Attribute("country1") sameAs COUNTRY}
 
+  val w5 =
+    Wrapper("LUT2")
+      .hasAttribute{Attribute("city1") sameAs CITY}
+      .hasAttribute{Attribute("region2") sameAs REGION}
+
   // WRITERS
-  Utils.generateAllFiles(Set(Sales),Set(w1,w2,w3))(configurationFilePath)
+  Utils.generateAllFiles(Set(Sales),Set(w1,w2,w3,w4,w5))(configurationFilePath)
 
 }

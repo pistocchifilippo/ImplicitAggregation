@@ -104,10 +104,6 @@ trait Attribute extends GraphComponent {
   def sameAs(feature: Feature):Attribute
 }
 
-object Attribute {
-  def apply(name: String): Attribute = AttributeImpl(name,None)
-}
-
 case class AttributeImpl (name: String, sameAs: Option[Feature]) extends Attribute {
   override def sameAs(feature: Feature): Attribute = AttributeImpl(this.name,Some(feature))
 
@@ -121,6 +117,7 @@ case class AttributeImpl (name: String, sameAs: Option[Feature]) extends Attribu
 }
 
 trait Wrapper extends GraphComponent {
+  def features: Set[Feature]
   def attributes: Set[Attribute]
   def hasAttribute(attribute: Attribute):Wrapper
   def -> (attribute: Attribute):Wrapper
@@ -133,6 +130,8 @@ case class WrapperImpl(name: String,attributes: Set[Attribute]) extends Wrapper 
     s"s:${name} rdf:type S:Wrapper\n" +
       attributes.map(a => s"s:${name} S:hasAttribute s:${a.name}\n").foldRight("")(_ + _) +
       attributes.map(_.stringify()).foldRight("")(_ + _)
+
+  override def features: Set[Feature] = attributes.map(_.sameAs).filter(_.nonEmpty).map(_.get)
 }
 
 // Operations definition
@@ -156,6 +155,10 @@ object Concept {
 
 object Level {
   def apply(name: String): Level = Level(name,Set.empty,Set.empty)
+}
+
+object Attribute {
+  def apply(name: String): Attribute = AttributeImpl(name,None)
 }
 
 object Wrapper {
