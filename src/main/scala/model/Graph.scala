@@ -136,6 +136,10 @@ case class WrapperImpl(name: String,attributes: Set[Attribute]) extends Wrapper 
 
 // Operations definition
 
+object Feature {
+  def apply(name:String): Feature = GenericFeature(name)
+}
+
 object AggregatingFunction {
   def apply(name: String): AggregatingFunction =
     Function(name, Set.empty,Set.empty, Set.empty)

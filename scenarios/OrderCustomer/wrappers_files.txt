@@ -1,2 +1,5 @@
-https://serginf.github.io/WrapperW1,/Users/filippo/GraphBuilder/scenarios/OrderCustomer/WrapperW1.csv
+https://serginf.github.io/WrapperW3,/Users/filippo/GraphBuilder/scenarios/OrderCustomer/WrapperW3.csv
+https://serginf.github.io/WrapperLUT,/Users/filippo/GraphBuilder/scenarios/OrderCustomer/WrapperLUT.csv
 https://serginf.github.io/WrapperW2,/Users/filippo/GraphBuilder/scenarios/OrderCustomer/WrapperW2.csv
+https://serginf.github.io/WrapperW1,/Users/filippo/GraphBuilder/scenarios/OrderCustomer/WrapperW1.csv
+https://serginf.github.io/WrapperLUT2,/Users/filippo/GraphBuilder/scenarios/OrderCustomer/WrapperLUT2.csv

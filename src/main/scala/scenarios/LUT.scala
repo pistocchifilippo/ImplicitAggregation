@@ -32,6 +32,7 @@ object LUT extends App {
               }
           }
       }
+  val q = Sales
 
   // Wrappers
   val w1 =
@@ -59,7 +60,8 @@ object LUT extends App {
       .hasAttribute{Attribute("city1") sameAs CITY}
       .hasAttribute{Attribute("region2") sameAs REGION}
 
+
   // WRITERS
-  Utils.generateAllFiles(Set(Sales),Set(w1,w2,w3,w4,w5))(configurationFilePath)
+  Utils.generateAllFiles(Set(Sales),Set(w1,w2,w3,w4,w5),q)(configurationFilePath)
 
 }

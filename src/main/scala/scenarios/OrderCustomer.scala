@@ -49,5 +49,5 @@ object OrderCustomer extends App {
       .hasAttribute{Attribute("name") sameAs NAME}
 
   // WRITERS
-  Utils.generateAllFiles(Set(Order),Set(w1,w2))(configurationFilePath)
+  Utils.generateAllFiles(Set(Order),Set(w1,w2),Order)(configurationFilePath)
 }

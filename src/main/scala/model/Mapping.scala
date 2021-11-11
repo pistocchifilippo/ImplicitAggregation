@@ -5,37 +5,10 @@ import java.util.Scanner
 
 object Mapping {
 
-  //  def mapping(features:Set[Feature], graph: Concept, root: Option[String]):Set[String] = {
-  //    // wrapper.attributes.map(_.sameAs).filter(_.nonEmpty).map(_.get)
-  //    val commonFeatures = graph.linkedFeatures.filter(f => features.contains(f._2))
-  //    // hasFeature + C-to-C
-  //    val mappingF = commonFeatures.flatMap(f => {
-  //      Set(s"s:${graph.name} G:hasFeature s:${f._2.name}") ++ Set{
-  //        f._2 match {
-  //          case IdFeature(name) => s"s:$name rdfs:subClassOf sc:identifier"
-  //          case _ => ""
-  //        }
-  //      }
-  //    }) + {
-  //      root match {
-  //        case Some(root) => root + s"s:${graph.name}"
-  //        case None => ""
-  //      }
-  //    }
-  //    if (graph.linkedConcepts.isEmpty) {
-  //      mappingF
-  //    } else {
-  //      mappingF ++
-  //        graph.linkedConcepts.flatMap(c =>
-  //          mapping(features, c._2,Some(s"s:${graph.name} s:${c._1.name} "))
-  //        )
-  //    }
-  //  }
-
   def mapping(features:Set[Feature], graph: Concept, conceptPath: Set[String]):Set[String] = {
-    val featureMappings =
-      if (graph.linkedFeatures.map(f => features.contains(f._2)).foldRight(false)(_ || _)) {
-        graph.linkedFeatures.flatMap(f =>
+    val featureMappings = {
+      if (graph.linkedFeatures.map(f => features.contains(f._2)).foldRight(false)(_ || _)) { // LE SCRIVO TUTTE!!
+        graph.linkedFeatures.filter(f => features.contains(f._2)).flatMap(f =>
           f._2 match {
             case IdFeature(name) => Set(s"s:${graph.name} G:hasFeature s:$name", s"s:$name rdfs:subClassOf sc:identifier")
             case GenericFeature(name) => Set(s"s:${graph.name} G:hasFeature s:$name")
@@ -44,7 +17,7 @@ object Mapping {
       } else {
         Set.empty
       }
-
+    }
     val aggConceptPath =
       if (featureMappings.nonEmpty){
         conceptPath
