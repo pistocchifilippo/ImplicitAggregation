@@ -115,8 +115,4 @@ object Test extends App {
   Mapping.generateMappingFile(Set(w1,w2,w3))(Sales)("scenarios/LUT/global_graph.txt")(f)
   f.close()
 
-
-
-
-
 }

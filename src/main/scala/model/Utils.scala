@@ -25,9 +25,11 @@ object Utils {
 //      Wrapper.GenerateMappingsFile(w,mappingWriter,scenario)
       Wrapper.GenerateWrapperFile(w,wrapperWriter,scenario)
       // Generating data files for each wrapper
-      val csvWriter = new BufferedWriter(new FileWriter(scenario + w.name +".csv"))
-      Wrapper.GenerateCsv(w,csvWriter,scenario)
-      csvWriter.close()
+      if(!new File(scenario + w.name +".csv").exists()){
+        val csvWriter = new BufferedWriter(new FileWriter(scenario + w.name +".csv"))
+        Wrapper.GenerateCsv(w,csvWriter,scenario)
+        csvWriter.close()
+      }
     })
     queryWriter.write(Query.generateQuery(query))
     // Closing

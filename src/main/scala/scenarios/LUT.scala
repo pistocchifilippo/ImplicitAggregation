@@ -4,8 +4,8 @@ import model._
 
 object LUT extends App {
 
-//  val configurationFilePath = "/Users/filippo/Desktop/NextiaQR/src/test/resources/scenarios/LUT/"
-  val configurationFilePath = "/Users/filippo/GraphBuilder/scenarios/LUT/"
+  val configurationFilePath = "/Users/filippo/Desktop/NextiaQR/src/test/resources/scenarios/LUT/"
+//  val configurationFilePath = "/Users/filippo/GraphBuilder/scenarios/LUT/"
   Utils.buildPath(configurationFilePath)
 
   // GRAPH DEFINITION
@@ -21,13 +21,13 @@ object LUT extends App {
     Concept("Sales")
       .hasFeature{REVENUE}
       .->("location"){
-        Concept("City")
+        Level("City")
           .hasFeature{CITY}
           .partOf{
-            Concept("Region")
+            Level("Region")
               .hasFeature{REGION}
               .partOf{
-                Concept("Country")
+                Level("Country")
                   .hasFeature{COUNTRY}
               }
           }

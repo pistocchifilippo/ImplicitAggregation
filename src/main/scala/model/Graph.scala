@@ -75,9 +75,9 @@ case class Level(
   override def hasConcept(label: String)(concept: Concept): Concept =
     if (label != "partOf") throw new Exception("For a level the labels should be partOf") else super.hasConcept(label)(concept)
 
-  override def stringify(): String =
-    super.stringify() +
-      s"s:${name} rdf:type G:Level\n"
+//  override def stringify(): String =
+//    super.stringify() +
+//      s"s:${name} rdf:type G:Level\n"
 }
 
 trait AggregatingFunction extends BaseConcept {
