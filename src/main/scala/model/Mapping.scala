@@ -7,7 +7,7 @@ object Mapping {
 
   def mapping(features:Set[Feature], graph: Concept, conceptPath: Set[String]):Set[String] = {
     val featureMappings = {
-      if (graph.linkedFeatures.map(f => features.contains(f._2)).foldRight(false)(_ || _)) { // LE SCRIVO TUTTE!!
+      if (graph.linkedFeatures.map(f => features.contains(f._2)).foldRight(false)(_ || _)) {
         graph.linkedFeatures.filter(f => features.contains(f._2)).flatMap(f =>
           f._2 match {
             case IdFeature(name) => Set(s"s:${graph.name} G:hasFeature s:$name", s"s:$name rdfs:subClassOf sc:identifier")

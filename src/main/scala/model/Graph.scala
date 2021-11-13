@@ -45,6 +45,10 @@ trait Concept extends GraphComponent {
       linkedConcepts.map(e => e._2.stringify()).foldRight("")(_ + _)
 }
 
+trait Graph extends Set[Concept] {
+  // need a traverse that seems to traverse one Concept but actually traverses a Set of Concept
+}
+
 trait BaseConcept extends Concept {
   override def hasFeature(feature: Feature): Concept = this match {
     case GenericConcept(name,linkedConcepts,linkedFeatures) => GenericConcept(name,linkedConcepts,linkedFeatures + Tuple2(Edge("hasFeature"),feature))
@@ -89,7 +93,7 @@ trait AggregatingFunction extends BaseConcept {
   override def hasFeature(feature: Feature): Concept = this
 
   override def stringify(): String =
-    s"s:${name} rdf:type G:Function\n" +
+//    s"s:${name} rdf:type G:Function\n" +
       measures.map(m => s"s:${name} s:aggregates s:${m.name}\n").foldRight("")(_ + _)
 }
 

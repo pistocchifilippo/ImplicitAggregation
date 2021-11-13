@@ -4,27 +4,35 @@ import model.ImplicitAggregation._
 
 object ImplicitAggregation {
 
-  def canAggregate: Concept => Boolean = q => allLevels(q).nonEmpty && allMeasures(q).nonEmpty && !allFeatures(q).exists(f => f match {
+  def canAggregate(q:Concept): Boolean =  allLevels(q).nonEmpty && allMeasures(q).nonEmpty && !allFeatures(q).exists(f => f match {
     case _: Measure => false
     case _: IdFeature => false
     case _ => true
   })
 
-  def extractGroupByClauses: Concept => Set[Level] = allLevels
+  def extractGroupByClauses(q:Concept): Set[Level] = allLevels(q)
 
-  def extractAggregationClauses: (Concept, Concept) => Set[(Measure,AggregatingFunction)] = ???
+  def extractAggregationClauses(functions:Set[AggregatingFunction], q:Concept): Set[(AggregatingFunction,Set[Measure])] = {
+    val measures = allMeasures(q)
+    functions.map(f => (f,f.measures.intersect(measures)))
+  }
 
-  def parseGBClauses: (Concept,Concept => Set[Level]) => Set[String] = ???
+  def parseGBClauses(levels: Set[Level]): String = levels.map(_.name).mkString(",")
 
-  def parseAggregationClauses: (Concept, Concept, (Concept, Concept) => Set[(Measure,AggregatingFunction)]) => Set[(Measure,AggregatingFunction)] = ???
+  def parseAggregationClauses(functionAndMeasure:Set[(AggregatingFunction,Set[Measure])]): String =
+    functionAndMeasure.flatMap(e => e._2.map(c => s"${e._1.name}(${c.name}) as ${c.name}")).mkString(",")
 
-  def makeView: Unit => String = ???
+  def makeView(): String = "SELECT a,b,c\nFROM A"
 
-  def makeSqlQuery: (Concept, Concept,
-    (Concept, Concept) => Set[(Measure,AggregatingFunction)],(Concept,Concept => Set[Level]) => Set[String],
-    (Concept,Concept => Set[Level]) => Set[String],(Concept, Concept, (Concept, Concept) => Set[(Measure,AggregatingFunction)]) => Set[(Measure,AggregatingFunction)],
-    Unit => String
-    ) => String = ???
+  def makeSqlQuery(functions:Set[AggregatingFunction],q:Concept): String =
+    if(canAggregate(q)){
+      val gbClauses = parseGBClauses(extractGroupByClauses(q))
+      val aggClauses = parseAggregationClauses(extractAggregationClauses(functions,q))
+      val view = makeView()
+      s"SELECT $gbClauses,$aggClauses\nFROM{\n$view\n}\nGROUP BY $gbClauses"
+    } else {
+      makeView()
+    }
 
   def allConcept(query: Concept): Set[Concept] =
     if(query.linkedConcepts.isEmpty) Set(query) else query.linkedConcepts.flatMap(c => allConcept(c._2)) + query
@@ -46,7 +54,6 @@ object ImplicitAggregation {
     }) ++ {
       if (query.linkedConcepts.nonEmpty) query.linkedConcepts.flatMap(c => allMeasures(c._2)) else Set.empty
     }
-
 }
 
 object TestAgg extends App{
@@ -73,8 +80,13 @@ object TestAgg extends App{
           }
       }
 
-  println(
-    canAggregate(q)
-  )
+  val avg = AggregatingFunction("avg") aggregates REVENUE
+  val sum = AggregatingFunction("sum") aggregates REVENUE
+
+//  println(
+//    extractAggregationClauses(Set(avg,sum),q).map(e => (e._1.name,e._2))
+//  )
+  println(makeSqlQuery(Set(avg,sum),q))
+
 
 }
