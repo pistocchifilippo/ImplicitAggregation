@@ -12,6 +12,7 @@ object Mapping {
           f._2 match {
             case IdFeature(name) => Set(s"s:${graph.name} G:hasFeature s:$name", s"s:$name rdfs:subClassOf sc:identifier")
             case GenericFeature(name) => Set(s"s:${graph.name} G:hasFeature s:$name")
+            case Measure(name) => Set(s"s:${graph.name} G:hasFeature s:$name")
           }
         )
       } else {
